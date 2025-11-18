@@ -110,9 +110,26 @@ web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 4. **Test health endpoint**: `https://your-service.onrender.com/healthz`
 5. **Test API endpoint**: `https://your-service.onrender.com/api/health`
 
-### Step 4: Get Backend URL
-- Render will provide: `https://omaguva-backend-xxxx.onrender.com`
-- **Save this URL** - you'll need it for frontend configuration
+### Step 4: Configure Custom Domain (Optional but Recommended)
+
+**To use your own domain (e.g., `api.yourdomain.com`) instead of Render's URL:**
+
+1. **In Render Dashboard** → Your Service → Settings → Custom Domains
+2. **Add Custom Domain**:
+   - Enter your domain: `api.yourdomain.com` (or `backend.yourdomain.com`)
+   - Render will provide DNS records to add
+3. **Update DNS** (in your domain registrar):
+   - Add CNAME record: `api` → `your-service.onrender.com`
+   - Or A record as provided by Render
+4. **Wait for SSL** (Render automatically provisions SSL certificates)
+5. **Verify**: Test `https://api.yourdomain.com/healthz`
+
+**Note**: You can still use Render's URL during setup, then switch to custom domain later.
+
+### Step 5: Get Backend URL
+- **Render URL**: `https://omaguva-backend-xxxx.onrender.com` (temporary)
+- **Custom Domain**: `https://api.yourdomain.com` (after DNS setup)
+- **Save the URL you'll use** - you'll need it for frontend configuration
 
 ---
 
@@ -133,9 +150,13 @@ npm run preview
 
 Create `.env.production` file:
 ```env
-# Backend API URL (from Render)
-VITE_API_BASE=https://omaguva-backend-xxxx.onrender.com/api
-VITE_API_URL=https://omaguva-backend-xxxx.onrender.com
+# Backend API URL - Use your custom domain (recommended)
+VITE_API_BASE=https://api.yourdomain.com/api
+VITE_API_URL=https://api.yourdomain.com
+
+# Or use Render URL temporarily (replace with custom domain later)
+# VITE_API_BASE=https://omaguva-backend-xxxx.onrender.com/api
+# VITE_API_URL=https://omaguva-backend-xxxx.onrender.com
 
 # Supabase (for frontend direct access if needed)
 VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -258,10 +279,12 @@ VITE_DEFAULT_PRODUCT_IMAGE=https://your-cdn.com/default-product.png
 ## 📝 Part 5: Post-Deployment
 
 ### 1. Update Webhook URLs
-If using payment gateways, update webhook URLs:
-- **ZohoPay**: `https://your-backend.onrender.com/api/payments/zohopay/webhook`
-- **PhonePe**: `https://your-backend.onrender.com/api/payments/phonepe/callback`
-- **Easebuzz**: `https://your-backend.onrender.com/api/payments/easebuzz/webhook`
+If using payment gateways, update webhook URLs to use your custom domain:
+- **ZohoPay**: `https://api.yourdomain.com/api/payments/zohopay/webhook`
+- **PhonePe**: `https://api.yourdomain.com/api/payments/phonepe/callback`
+- **Easebuzz**: `https://api.yourdomain.com/api/payments/easebuzz/webhook`
+
+**Note**: Replace `api.yourdomain.com` with your actual custom domain!
 
 ### 2. Monitor Logs
 - **Render**: Dashboard → Logs tab
@@ -349,14 +372,22 @@ PHONEPE_MERCHANT_SECRET=xxx (optional)
 
 ### Frontend (HostingRaja)
 ```
-VITE_API_BASE=https://xxx.onrender.com/api
-VITE_API_URL=https://xxx.onrender.com
+# Use your custom domain for API (recommended)
+VITE_API_BASE=https://api.yourdomain.com/api
+VITE_API_URL=https://api.yourdomain.com
+
+# Or use Render URL temporarily
+# VITE_API_BASE=https://xxx.onrender.com/api
+# VITE_API_URL=https://xxx.onrender.com
+
 VITE_SUPABASE_URL=https://xxx.supabase.co
 VITE_SUPABASE_ANON_KEY=xxx
 VITE_ZOHOPAY_ACCOUNT_ID=xxx (optional)
 VITE_ZOHOPAY_DOMAIN=IN (optional)
 VITE_ZOHOPAY_API_KEY=xxx (optional)
 ```
+
+**Important**: Replace `api.yourdomain.com` with your actual custom domain!
 
 ---
 
