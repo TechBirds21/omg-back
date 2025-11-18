@@ -1,0 +1,42 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[headers]]
+# Never cache SPA shell so first load always fetches fresh HTML
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
+[[headers]]
+# Also guard the root path in case it is requested directly
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
+[[headers]]
+# Cache-bust all HTML routes served by SPA fallback
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
+[[headers]]
+# Allow immutable caching for fingerprinted assets
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[redirects]]
+  from = "/api/webhook/phonepe"
+  to = "https://yxaohpktlgkspapnhbwa.functions.supabase.co/phonepe-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/webhook/easebuzz"
+  to = "https://yxaohpktlgkspapnhbwa.functions.supabase.co/easebuzz-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
