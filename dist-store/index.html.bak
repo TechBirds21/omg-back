@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+
+  <title>O Maguva | Traditional Sarees & Clothing | Premium Handloom Collection</title>
+
+  <meta name="description"
+    content="O Maguva offers premium traditional sarees and clothing with authentic handloom craftsmanship. Discover our exclusive collection of sarees, traditional wear, and ethnic fashion for every occasion." />
+  <meta name="keywords"
+    content="O Maguva, Traditional Sarees, Handloom Sarees, Ethnic Wear, Indian Clothing, Saree Collection, Traditional Fashion, Handcrafted Textiles, Premium Sarees, Ethnic Outfits, Indian Traditional Wear" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title"
+    content="O Maguva | Traditional Sarees & Clothing | Premium Handloom Collection" />
+  <meta property="og:description"
+    content="Discover premium traditional sarees and ethnic wear at O Maguva. Authentic handloom craftsmanship with exclusive designs for every occasion." />
+  <meta property="og:image" content="%PUBLIC_URL%/logo.png" />
+  <meta property="og:url" content="https://omaguva.com" />
+  <meta property="og:site_name" content="O Maguva" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title"
+    content="O Maguva | Traditional Sarees & Clothing | Premium Handloom Collection" />
+  <meta name="twitter:description"
+    content="Discover premium traditional sarees and ethnic wear at O Maguva. Authentic handloom craftsmanship with exclusive designs for every occasion." />
+  <meta name="twitter:image" content="%PUBLIC_URL%/logo.png" />
+
+  <!-- App icons -->
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/favicon.png" />
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
+</html>

@@ -104,9 +104,9 @@ const CustomerManagement = () => {
         total_orders: customerOrders.length,
         total_spent: customerOrders.reduce((sum, order) => sum + parseFloat(String(order.amount) || '0'), 0),
         last_order_date: customerOrders.length > 0 ? 
-          new Date(Math.max(...customerOrders.map(o => new Date(o.created_at).getTime()))).toISOString() : null
-      };
-    });
+            new Date(Math.max(...customerOrders.map(o => new Date(o.created_at).getTime()))).toISOString() : null
+        };
+      }));
 
     // Get all orders to find customers not in customers table
     const { getAllOrdersForAnalytics } = await import('@/lib/api-admin');

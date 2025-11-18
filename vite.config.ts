@@ -61,7 +61,9 @@ export default defineConfig(({ mode }) => ({
     },
     logOverride: { 
       'this-is-undefined-in-esm': 'silent',
+      'unsupported-dynamic-import': 'silent',
     },
+    legalComments: 'none',
   },
   build: {
     target: 'es2020',

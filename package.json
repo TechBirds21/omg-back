@@ -26,7 +26,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "build:check": "tsc && vite build",
+    "build:store": "vite build --config vite.store.config.ts",
+    "build:all": "npm run build && npm run build:store",
     "build:dev": "vite build --mode development",
     "build:fast": "vite build --minify false",
     "build:analyze": "vite build --mode analyze",

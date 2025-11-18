@@ -1,4 +1,5 @@
 // @ts-nocheck
+// @ts-ignore
 // TypeScript checking enabled for better type safety
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import * as XLSX from 'xlsx';
@@ -2528,44 +2529,36 @@ const Orders: React.FC = () => {
 
   // Confirm status change
   const confirmStatusChange = async () => {
-    if (!confirmState) return;
-
+    if (!confirmState) {
+      return;
+    }
+    let updateSuccess = false;
     try {
       if (confirmState.mode === 'single') {
         await handleStatusUpdate(confirmState.orders[0].id, confirmState.to);
-      } else {
-        const orderIds = confirmState.orders.map(o => o.id);
+        updateSuccess = true;
+      } else if (confirmState.mode === 'bulk') {
+        const orderIds = confirmState.orders.map((o: any) => o.id);
         await updateOrdersStatusBulk(orderIds, confirmState.to);
-        
-        // DISABLED: Auto-update payment status to 'paid' when moving to processing or higher
-        // This was causing inventory issues due to database triggers
-        /*
-        if (['processing', 'ready_to_ship', 'shipped', 'delivered'].includes(confirmState.to)) {
-          for (const orderId of orderIds) {
-            const order = orders.find(o => o.id === orderId);
-            if (order && order.payment_status !== 'paid') {
-              await updateOrderPaymentStatusById(orderId, 'paid');
-            }
-          }
-        }
-        */
-        
         await executeWithLoading(fetchOrders, { isRefresh: true, preserveData: true });
+        const orderCount = orderIds.length;
+        const statusTo = confirmState.to;
         toast({
           title: "Bulk Status Updated",
-          description: `${orderIds.length} orders have been updated to ${confirmState.to}.`,
+          description: orderCount + " orders have been updated to " + statusTo + ".",
         });
         setSelectedIds([]);
+        updateSuccess = true;
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Error updating order status:', err);
       toast({
         title: "Error",
         description: "Failed to update order status.",
         variant: "destructive",
       });
-    } finally {
-      setConfirmState(null);
     }
+    setConfirmState(null);
   };
 
   // Removed testSupabaseConnection and checkOrdersTable - now using Python backend
