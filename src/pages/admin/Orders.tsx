@@ -1752,9 +1752,9 @@ const Orders: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [hasLoadedOnce, selectedYear, selectedMonth, statusFilter, vendorFilter, paymentStatusFilter, searchTerm, startDate, endDate, startTime, endTime, pageSize, fetchSummaryData, fetchOrders, executeWithLoading]);
 
-  const BackgroundRefreshIndicator: React.FC<{ isRefreshing: boolean }> = ({ isRefreshing }) => {
+  const BackgroundRefreshIndicator = ({ isRefreshing }: { isRefreshing: boolean }) => {
     if (!isRefreshing) return null;
-    
+
     return (
       <div className="fixed top-20 right-6 z-50 animate-fade-in">
         <div className="bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
@@ -2557,8 +2557,9 @@ const Orders: React.FC = () => {
         description: "Failed to update order status.",
         variant: "destructive",
       });
+    } finally {
+      setConfirmState(null);
     }
-    setConfirmState(null);
   };
 
   // Removed testSupabaseConnection and checkOrdersTable - now using Python backend
@@ -2573,7 +2574,14 @@ const Orders: React.FC = () => {
   return (
     <div className="flex flex-col h-full space-y-4 md:space-y-6 relative w-full bg-background">
       {/* Background refresh indicator */}
-      <BackgroundRefreshIndicator isRefreshing={isRefreshing} />
+      {isRefreshing && (
+        <div className="fixed top-20 right-6 z-50 animate-fade-in">
+          <div className="bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm font-medium">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Refreshing data...
+          </div>
+        </div>
+      )}
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 flex-shrink-0">
