@@ -1,5 +1,5 @@
-// Store Billing System for Physical Store
-// Accessible at store.omaguva.com
+// Modern Store Billing System with Step-by-Step Flow
+// Beautiful Colors & Card-Based UI
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,17 +10,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  ShoppingCart, 
-  Plus, 
-  Minus, 
-  X, 
-  Search, 
+import {
+  ShoppingCart,
+  Plus,
+  Minus,
+  X,
+  Search,
   Receipt,
   Send,
   Download,
   Tag,
-  Calculator
+  Calculator,
+  Grid3x3,
+  Package,
+  Palette,
+  Ruler,
+  Check,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 
 interface BillItem {
@@ -45,17 +52,45 @@ interface Product {
   colors?: string[];
   sizes?: string[];
   total_stock: number;
+  category_id?: string;
+  images?: string[];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  images?: string[];
+  is_active: boolean;
+}
+
+// Color palette for categories
+const categoryColors = [
+  { bg: 'bg-gradient-to-br from-rose-400 to-rose-600', border: 'border-rose-500', text: 'text-rose-700', lightBg: 'bg-rose-50' },
+  { bg: 'bg-gradient-to-br from-blue-400 to-blue-600', border: 'border-blue-500', text: 'text-blue-700', lightBg: 'bg-blue-50' },
+  { bg: 'bg-gradient-to-br from-emerald-400 to-emerald-600', border: 'border-emerald-500', text: 'text-emerald-700', lightBg: 'bg-emerald-50' },
+  { bg: 'bg-gradient-to-br from-purple-400 to-purple-600', border: 'border-purple-500', text: 'text-purple-700', lightBg: 'bg-purple-50' },
+  { bg: 'bg-gradient-to-br from-amber-400 to-amber-600', border: 'border-amber-500', text: 'text-amber-700', lightBg: 'bg-amber-50' },
+  { bg: 'bg-gradient-to-br from-teal-400 to-teal-600', border: 'border-teal-500', text: 'text-teal-700', lightBg: 'bg-teal-50' },
+  { bg: 'bg-gradient-to-br from-indigo-400 to-indigo-600', border: 'border-indigo-500', text: 'text-indigo-700', lightBg: 'bg-indigo-50' },
+  { bg: 'bg-gradient-to-br from-pink-400 to-pink-600', border: 'border-pink-500', text: 'text-pink-700', lightBg: 'bg-pink-50' },
+];
+
 const StoreBilling = () => {
+  // UI State
+  const [step, setStep] = useState<'category' | 'product' | 'billing'>('category');
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Data
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [items, setItems] = useState<BillItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
   const [discountPercentage, setDiscountPercentage] = useState(0);
@@ -67,7 +102,85 @@ const StoreBilling = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showInvoice, setShowInvoice] = useState(false);
   const [createdBill, setCreatedBill] = useState<any>(null);
-  const { toast } = useToast();
+  const { toast} = useToast();
+
+  // Selected options for current product
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [quantity, setQuantity] = useState(1);
+
+  // Load categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'}/store/categories`);
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.filter((cat: Category) => cat.is_active));
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchProductsByCategory = async (categoryId: string) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'}/store/products?categoryId=${categoryId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  // Handle category selection
+  const handleSelectCategory = (category: Category) => {
+    setSelectedCategory(category);
+    fetchProductsByCategory(category.id);
+    setStep('product');
+  };
+
+  // Handle product selection
+  const handleSelectProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setSelectedColor(product.colors?.[0] || '');
+    setSelectedSize(product.sizes?.[0] || '');
+    setQuantity(1);
+  };
+
+  // Add product to bill
+  const handleAddToBill = () => {
+    if (!selectedProduct) return;
+
+    const newItem: BillItem = {
+      product_id: selectedProduct.id,
+      product_name: selectedProduct.name,
+      product_sku: selectedProduct.sku,
+      quantity: quantity,
+      unit_price: selectedProduct.price,
+      color: selectedColor,
+      size: selectedSize,
+      discount_amount: 0,
+      discount_percentage: 0,
+      line_total: selectedProduct.price * quantity,
+    };
+
+    setItems([...items, newItem]);
+    setSelectedProduct(null);
+    setSelectedColor('');
+    setSelectedSize('');
+    setQuantity(1);
+
+    toast({
+      title: "Added to Bill",
+      description: `${selectedProduct.name} added successfully`,
+    });
+  };
 
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
@@ -75,144 +188,24 @@ const StoreBilling = () => {
   const totalAfterDiscount = subtotal - discountAmount;
   const totalAmount = totalAfterDiscount + taxAmount;
 
-  // Search products
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/store/billing/products/search?search=${encodeURIComponent(searchQuery)}&limit=20`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-        setShowSearch(true);
-      }
-    } catch (error) {
-      console.error('Error searching products:', error);
-      toast({
-        title: "Error",
-        description: "Failed to search products",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Add product to bill
-  const handleAddProduct = (product: Product) => {
-    const existingItem = items.find(item => item.product_id === product.id);
-    
-    if (existingItem) {
-      // Increase quantity
-      setItems(items.map(item =>
-        item.product_id === product.id
-          ? {
-              ...item,
-              quantity: item.quantity + 1,
-              line_total: (item.unit_price * (item.quantity + 1)) - item.discount_amount
-            }
-          : item
-      ));
-    } else {
-      // Add new item
-      const newItem: BillItem = {
-        product_id: product.id,
-        product_name: product.name,
-        product_sku: product.sku,
-        quantity: 1,
-        unit_price: product.price,
-        discount_amount: 0,
-        discount_percentage: 0,
-        line_total: product.price,
-      };
-      setItems([...items, newItem]);
-    }
-    
-    setSearchQuery('');
-    setShowSearch(false);
-    setSearchResults([]);
-  };
-
-  // Update item quantity
-  const handleUpdateQuantity = (productId: string, delta: number) => {
-    setItems(items.map(item => {
-      if (item.product_id === productId) {
-        const newQuantity = Math.max(1, item.quantity + delta);
-        return {
-          ...item,
-          quantity: newQuantity,
-          line_total: (item.unit_price * newQuantity) - item.discount_amount
-        };
-      }
-      return item;
-    }));
-  };
-
   // Remove item
   const handleRemoveItem = (productId: string) => {
     setItems(items.filter(item => item.product_id !== productId));
   };
 
-  // Apply item-level discount
-  const handleItemDiscount = (productId: string, discount: number, isPercentage: boolean) => {
+  // Update quantity
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
     setItems(items.map(item => {
       if (item.product_id === productId) {
-        const discountAmount = isPercentage
-          ? (item.unit_price * item.quantity * discount / 100)
-          : discount;
         return {
           ...item,
-          discount_amount: discountAmount,
-          discount_percentage: isPercentage ? discount : 0,
-          line_total: (item.unit_price * item.quantity) - discountAmount
+          quantity: newQuantity,
+          line_total: item.unit_price * newQuantity - item.discount_amount
         };
       }
       return item;
     }));
-  };
-
-  // Validate discount code
-  const handleValidateDiscount = async () => {
-    if (!discountCode.trim()) {
-      setDiscountAmount(0);
-      setDiscountPercentage(0);
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/store/billing/discounts/validate?code=${encodeURIComponent(discountCode)}&amount=${subtotal}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        if (data.valid) {
-          setDiscountAmount(data.discount_amount);
-          setDiscountPercentage(data.discount.discount_value || 0);
-          toast({
-            title: "Discount Applied",
-            description: data.message,
-          });
-        } else {
-          setDiscountAmount(0);
-          setDiscountPercentage(0);
-          toast({
-            title: "Invalid Discount",
-            description: data.message,
-            variant: "destructive",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error validating discount:', error);
-      toast({
-        title: "Error",
-        description: "Failed to validate discount code",
-        variant: "destructive",
-      });
-    }
   };
 
   // Create bill
@@ -256,7 +249,6 @@ const StoreBilling = () => {
         discount_code: discountCode || undefined,
         discount_amount: discountAmount,
         discount_percentage: discountPercentage,
-        discount_type: discountCode ? 'store_special' : undefined,
         tax_percentage: taxPercentage,
         payment_method: paymentMethod,
         notes: notes || undefined,
@@ -264,11 +256,9 @@ const StoreBilling = () => {
         send_sms: sendSMS,
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/store/billing/create`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE || 'http://localhost:8000/api'}/store/billing/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(billData),
       });
 
@@ -276,25 +266,20 @@ const StoreBilling = () => {
         const data = await response.json();
         setCreatedBill(data.bill);
         setShowInvoice(true);
-        toast({
-          title: "Success",
-          description: "Bill created successfully!",
-        });
-        
-        // Reset form
+        toast({ title: "Success", description: "Bill created successfully!" });
+
+        // Reset
+        setItems([]);
         setCustomerName('');
         setCustomerEmail('');
         setCustomerPhone('');
         setCustomerAddress('');
-        setItems([]);
         setDiscountCode('');
         setDiscountAmount(0);
         setDiscountPercentage(0);
         setTaxPercentage(0);
-        setPaymentMethod('cash');
-        setNotes('');
-        setSendEmail(false);
-        setSendSMS(false);
+        setStep('category');
+        setSelectedCategory(null);
       } else {
         const error = await response.json();
         toast({
@@ -305,370 +290,536 @@ const StoreBilling = () => {
       }
     } catch (error) {
       console.error('Error creating bill:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create bill",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to create bill", variant: "destructive" });
     } finally {
       setIsCreating(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Store Billing</h1>
-          <p className="text-slate-600 mt-1">Create invoices for physical store sales</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-rose-600 to-purple-600 bg-clip-text text-transparent">
+                Store Billing System
+              </h1>
+              <p className="text-slate-600 mt-2">Create beautiful invoices for your store</p>
+            </div>
+            <Badge className="bg-gradient-to-r from-rose-500 to-purple-500 text-white px-6 py-3 text-lg shadow-lg">
+              <Receipt className="h-5 w-5 mr-2" />
+              {items.length} Items
+            </Badge>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="flex items-center gap-4 mt-6">
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${step === 'category' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
+              <Grid3x3 className="h-4 w-4" />
+              <span className="font-medium">1. Select Category</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-slate-400" />
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${step === 'product' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
+              <Package className="h-4 w-4" />
+              <span className="font-medium">2. Select Products</span>
+            </div>
+            <ArrowRight className="h-4 w-4 text-slate-400" />
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${step === 'billing' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
+              <Receipt className="h-4 w-4" />
+              <span className="font-medium">3. Complete Billing</span>
+            </div>
+          </div>
         </div>
-        <Badge className="bg-primary text-white px-4 py-2">
-          <Receipt className="h-4 w-4 mr-2" />
-          New Bill
-        </Badge>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Customer & Products */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Customer Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="customerName">Customer Name *</Label>
-                <Input
-                  id="customerName"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="customerPhone">Phone</Label>
-                  <Input
-                    id="customerPhone"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="Phone number"
-                  />
+        {/* Step 1: Category Selection */}
+        {step === 'category' && (
+          <div className="space-y-6">
+            <Card className="border-2 border-rose-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-rose-50 to-purple-50 border-b border-rose-100">
+                <CardTitle className="flex items-center gap-2 text-rose-900">
+                  <Grid3x3 className="h-6 w-6" />
+                  Select Product Category
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {categories.map((category, index) => {
+                    const colorScheme = categoryColors[index % categoryColors.length];
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => handleSelectCategory(category)}
+                        className="group relative overflow-hidden rounded-xl border-2 border-slate-200 hover:border-rose-400 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                      >
+                        <div className={`${colorScheme.bg} h-32 flex items-center justify-center text-white text-4xl font-bold p-4`}>
+                          {category.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="p-4 bg-white">
+                          <p className="font-semibold text-slate-900 text-center">{category.name}</p>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <Label htmlFor="customerEmail">Email</Label>
-                  <Input
-                    id="customerEmail"
-                    type="email"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    placeholder="Email address"
-                  />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="customerAddress">Address</Label>
-                <Input
-                  id="customerAddress"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  placeholder="Customer address"
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-          {/* Product Search & Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Add Products</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (e.target.value.trim()) {
-                        handleSearch();
-                      } else {
-                        setShowSearch(false);
-                      }
-                    }}
-                    onFocus={() => searchQuery && handleSearch()}
-                    placeholder="Search products by name or SKU..."
-                    className="pl-10"
-                  />
-                  {showSearch && searchResults.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {searchResults.map((product) => (
-                        <div
-                          key={product.id}
-                          onClick={() => handleAddProduct(product)}
-                          className="p-3 hover:bg-primary/10 cursor-pointer border-b border-gray-100 last:border-0"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-slate-900">{product.name}</p>
-                              <p className="text-sm text-slate-500">SKU: {product.sku || 'N/A'} | Stock: {product.total_stock}</p>
-                            </div>
-                            <p className="font-semibold text-primary">₹{product.price}</p>
+        {/* Step 2: Product Selection */}
+        {step === 'product' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Products List */}
+            <div className="lg:col-span-2 space-y-4">
+              <Card className="border-2 border-blue-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-blue-900">
+                      <Package className="h-6 w-6" />
+                      Products in {selectedCategory?.name}
+                    </CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setStep('category');
+                        setSelectedCategory(null);
+                        setProducts([]);
+                      }}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Change Category
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    {products.map((product) => (
+                      <button
+                        key={product.id}
+                        onClick={() => handleSelectProduct(product)}
+                        className={`text-left p-4 rounded-lg border-2 transition-all duration-300 hover:shadow-lg ${
+                          selectedProduct?.id === product.id
+                            ? 'border-rose-400 bg-rose-50 shadow-md'
+                            : 'border-slate-200 hover:border-blue-400 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">{product.name}</p>
+                            <p className="text-sm text-slate-500 mt-1">SKU: {product.sku || 'N/A'}</p>
                           </div>
+                          {selectedProduct?.id === product.id && (
+                            <Check className="h-5 w-5 text-rose-600" />
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-3">
+                          <span className="text-2xl font-bold text-rose-600">₹{product.price}</span>
+                          <Badge variant={product.total_stock > 0 ? "default" : "destructive"} className="text-xs">
+                            Stock: {product.total_stock}
+                          </Badge>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Product Details & Add */}
+            <div className="space-y-4">
+              {selectedProduct && (
+                <>
+                  <Card className="border-2 border-emerald-200 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                      <CardTitle className="text-emerald-900">Product Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-4">
+                      <div>
+                        <p className="text-sm text-slate-600 mb-1">Product Name</p>
+                        <p className="font-semibold text-lg text-slate-900">{selectedProduct.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600 mb-1">Price</p>
+                        <p className="text-3xl font-bold text-emerald-600">₹{selectedProduct.price}</p>
+                      </div>
+
+                      {/* Color Selection */}
+                      {selectedProduct.colors && selectedProduct.colors.length > 0 && (
+                        <div>
+                          <Label className="flex items-center gap-2 mb-2">
+                            <Palette className="h-4 w-4" />
+                            Select Color
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProduct.colors.map((color) => (
+                              <button
+                                key={color}
+                                onClick={() => setSelectedColor(color)}
+                                className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                  selectedColor === color
+                                    ? 'border-emerald-500 bg-emerald-100 text-emerald-900 shadow-md'
+                                    : 'border-slate-300 bg-white text-slate-700 hover:border-emerald-400'
+                                }`}
+                              >
+                                {color}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Size Selection */}
+                      {selectedProduct.sizes && selectedProduct.sizes.length > 0 && (
+                        <div>
+                          <Label className="flex items-center gap-2 mb-2">
+                            <Ruler className="h-4 w-4" />
+                            Select Size
+                          </Label>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedProduct.sizes.map((size) => (
+                              <button
+                                key={size}
+                                onClick={() => setSelectedSize(size)}
+                                className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                  selectedSize === size
+                                    ? 'border-emerald-500 bg-emerald-100 text-emerald-900 shadow-md'
+                                    : 'border-slate-300 bg-white text-slate-700 hover:border-emerald-400'
+                                }`}
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quantity */}
+                      <div>
+                        <Label htmlFor="quantity" className="mb-2">Quantity</Label>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="h-10 w-10 border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <Input
+                            id="quantity"
+                            type="number"
+                            value={quantity}
+                            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                            className="text-center text-xl font-bold border-2 border-emerald-300"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setQuantity(quantity + 1)}
+                            className="h-10 w-10 border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-200">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-slate-600">Subtotal:</span>
+                          <span className="text-2xl font-bold text-emerald-600">
+                            ₹{(selectedProduct.price * quantity).toFixed(2)}
+                          </span>
+                        </div>
+                        <Button
+                          onClick={handleAddToBill}
+                          className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-lg shadow-lg"
+                        >
+                          <Plus className="h-5 w-5 mr-2" />
+                          Add to Bill
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+
+              {/* Continue to Billing Button */}
+              {items.length > 0 && (
+                <Button
+                  onClick={() => setStep('billing')}
+                  className="w-full h-14 bg-gradient-to-r from-rose-500 to-purple-500 hover:from-rose-600 hover:to-purple-600 text-white font-bold text-lg shadow-lg"
+                >
+                  Continue to Billing
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Billing & Checkout */}
+        {step === 'billing' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left: Customer & Items */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Customer Info */}
+              <Card className="border-2 border-purple-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
+                  <CardTitle className="text-purple-900">Customer Information</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="customerName">Customer Name *</Label>
+                      <Input
+                        id="customerName"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Enter customer name"
+                        className="border-2 border-purple-200 focus:border-purple-400"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="customerPhone">Phone Number</Label>
+                      <Input
+                        id="customerPhone"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="Phone number"
+                        className="border-2 border-purple-200 focus:border-purple-400"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="customerEmail">Email Address</Label>
+                      <Input
+                        id="customerEmail"
+                        type="email"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                        placeholder="Email address"
+                        className="border-2 border-purple-200 focus:border-purple-400"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="customerAddress">Address</Label>
+                      <Input
+                        id="customerAddress"
+                        value={customerAddress}
+                        onChange={(e) => setCustomerAddress(e.target.value)}
+                        placeholder="Customer address"
+                        className="border-2 border-purple-200 focus:border-purple-400"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bill Items */}
+              <Card className="border-2 border-blue-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-blue-900 flex items-center gap-2">
+                      <ShoppingCart className="h-6 w-6" />
+                      Bill Items ({items.length})
+                    </CardTitle>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setStep('product')}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add More
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  {items.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <ShoppingCart className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                      <p>No items in bill. Go back to add products.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {items.map((item) => (
+                        <div key={item.product_id} className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border-2 border-blue-200">
+                          <div className="flex-1">
+                            <p className="font-semibold text-slate-900">{item.product_name}</p>
+                            <div className="flex gap-4 text-sm text-slate-600 mt-1">
+                              {item.color && <span className="flex items-center gap-1"><Palette className="h-3 w-3" /> {item.color}</span>}
+                              {item.size && <span className="flex items-center gap-1"><Ruler className="h-3 w-3" /> {item.size}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleUpdateQuantity(item.product_id, item.quantity - 1)}
+                              className="h-8 w-8 border-blue-300 text-blue-700 hover:bg-blue-100"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-12 text-center font-bold text-lg">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleUpdateQuantity(item.product_id, item.quantity + 1)}
+                              className="h-8 w-8 border-blue-300 text-blue-700 hover:bg-blue-100"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-blue-600">₹{item.line_total.toFixed(2)}</p>
+                            <p className="text-xs text-slate-500">₹{item.unit_price} × {item.quantity}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveItem(item.product_id)}
+                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-5 w-5" />
+                          </Button>
                         </div>
                       ))}
                     </div>
                   )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Bill Items */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Bill Items ({items.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {items.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                  <p>No items added. Search and add products to create a bill.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {items.map((item, index) => (
-                    <div key={item.product_id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-900">{item.product_name}</p>
-                        <p className="text-sm text-slate-500">SKU: {item.product_sku || 'N/A'}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleUpdateQuantity(item.product_id, -1)}
-                          className="h-8 w-8"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-12 text-center font-medium">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleUpdateQuantity(item.product_id, 1)}
-                          className="h-8 w-8"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-slate-900">₹{item.line_total.toFixed(2)}</p>
-                        <p className="text-xs text-slate-500">₹{item.unit_price} × {item.quantity}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveItem(item.product_id)}
-                        className="h-8 w-8 text-red-500 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+            {/* Right: Summary & Payment */}
+            <div className="space-y-6">
+              {/* Payment Summary */}
+              <Card className="border-2 border-emerald-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+                  <CardTitle className="flex items-center gap-2 text-emerald-900">
+                    <Calculator className="h-6 w-6" />
+                    Payment Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between text-slate-700">
+                    <span>Subtotal</span>
+                    <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="taxPercentage" className="text-slate-700">Tax (%)</Label>
+                    <Input
+                      id="taxPercentage"
+                      type="number"
+                      value={taxPercentage}
+                      onChange={(e) => setTaxPercentage(parseFloat(e.target.value) || 0)}
+                      className="w-24 border-2 border-emerald-200"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  {taxAmount > 0 && (
+                    <div className="flex justify-between text-slate-700">
+                      <span>Tax Amount</span>
+                      <span className="font-semibold">₹{taxAmount.toFixed(2)}</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                  )}
+                  <div className="border-t-2 border-emerald-200 pt-4">
+                    <div className="flex justify-between text-2xl font-bold text-emerald-600">
+                      <span>Total</span>
+                      <span>₹{totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-        {/* Right Column - Pricing & Actions */}
-        <div className="space-y-6">
-          {/* Discount Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Discount
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="discountCode">Discount Code</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="discountCode"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value)}
-                    placeholder="Enter discount code"
-                  />
-                  <Button onClick={handleValidateDiscount} variant="outline">
-                    Apply
+              {/* Payment Method */}
+              <Card className="border-2 border-amber-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+                  <CardTitle className="text-amber-900">Payment Method</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <Label htmlFor="paymentMethod">Payment Type</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger className="border-2 border-amber-200">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">Cash</SelectItem>
+                        <SelectItem value="card">Card</SelectItem>
+                        <SelectItem value="upi">UPI</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Additional Notes</Label>
+                    <Input
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Any special notes..."
+                      className="border-2 border-amber-200"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Create Bill Button */}
+              <Button
+                onClick={handleCreateBill}
+                disabled={isCreating || items.length === 0 || !customerName.trim()}
+                className="w-full h-16 bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 hover:from-rose-600 hover:via-purple-600 hover:to-indigo-600 text-white font-bold text-xl shadow-2xl disabled:opacity-50"
+              >
+                {isCreating ? 'Creating Bill...' : '✓ Complete & Generate Invoice'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Invoice Dialog */}
+        <Dialog open={showInvoice} onOpenChange={setShowInvoice}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-2xl text-emerald-600">✓ Invoice Generated Successfully!</DialogTitle>
+            </DialogHeader>
+            {createdBill && (
+              <div className="space-y-4">
+                <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg border-2 border-emerald-200">
+                  <p className="text-sm text-slate-600 mb-1">Bill Number</p>
+                  <p className="text-3xl font-bold text-emerald-600">{createdBill.bill_number}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white rounded-lg border border-slate-200">
+                    <p className="text-sm text-slate-600">Customer</p>
+                    <p className="font-semibold text-lg">{createdBill.customer_name}</p>
+                  </div>
+                  <div className="p-4 bg-white rounded-lg border border-slate-200">
+                    <p className="text-sm text-slate-600">Total Amount</p>
+                    <p className="text-2xl font-bold text-emerald-600">₹{createdBill.total_amount}</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1 h-12 border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                    <Download className="h-5 w-5 mr-2" />
+                    Download PDF
+                  </Button>
+                  <Button variant="outline" className="flex-1 h-12 border-2 border-blue-300 text-blue-700 hover:bg-blue-50">
+                    <Send className="h-5 w-5 mr-2" />
+                    Send Invoice
                   </Button>
                 </div>
               </div>
-              {discountAmount > 0 && (
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <p className="text-sm text-slate-600">Discount Applied</p>
-                  <p className="text-lg font-semibold text-primary">-₹{discountAmount.toFixed(2)}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Pricing Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calculator className="h-5 w-5" />
-                Pricing Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-slate-600">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </div>
-              {discountAmount > 0 && (
-                <div className="flex justify-between text-primary">
-                  <span>Discount</span>
-                  <span>-₹{discountAmount.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <Label htmlFor="taxPercentage" className="text-slate-600">Tax (%)</Label>
-                <Input
-                  id="taxPercentage"
-                  type="number"
-                  value={taxPercentage}
-                  onChange={(e) => setTaxPercentage(parseFloat(e.target.value) || 0)}
-                  className="w-20"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              {taxAmount > 0 && (
-                <div className="flex justify-between text-slate-600">
-                  <span>Tax</span>
-                  <span>₹{taxAmount.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="border-t border-gray-200 pt-3">
-                <div className="flex justify-between text-lg font-bold text-slate-900">
-                  <span>Total</span>
-                  <span>₹{totalAmount.toFixed(2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment & Options */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment & Options</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="paymentMethod">Payment Method</Label>
-                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="upi">UPI</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Input
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes..."
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="sendEmail"
-                    checked={sendEmail}
-                    onChange={(e) => setSendEmail(e.target.checked)}
-                    className="rounded"
-                  />
-                  <Label htmlFor="sendEmail" className="cursor-pointer">Send Invoice via Email</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="sendSMS"
-                    checked={sendSMS}
-                    onChange={(e) => setSendSMS(e.target.checked)}
-                    className="rounded"
-                  />
-                  <Label htmlFor="sendSMS" className="cursor-pointer">Send Invoice via SMS</Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Create Bill Button */}
-          <Button
-            onClick={handleCreateBill}
-            disabled={isCreating || items.length === 0 || !customerName.trim()}
-            className="w-full h-12 text-lg"
-            size="lg"
-          >
-            {isCreating ? 'Creating...' : 'Create Bill & Generate Invoice'}
-          </Button>
-        </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Invoice Preview Dialog */}
-      <Dialog open={showInvoice} onOpenChange={setShowInvoice}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Invoice Generated Successfully</DialogTitle>
-          </DialogHeader>
-          {createdBill && (
-            <div className="space-y-4">
-              <div className="p-4 bg-primary/10 rounded-lg">
-                <p className="text-sm text-slate-600">Bill Number</p>
-                <p className="text-2xl font-bold text-primary">{createdBill.bill_number}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-slate-600">Customer</p>
-                  <p className="font-medium">{createdBill.customer_name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-600">Total Amount</p>
-                  <p className="text-xl font-bold text-primary">₹{createdBill.total_amount}</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download PDF
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Invoice
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
 
 export default StoreBilling;
-
