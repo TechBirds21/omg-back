@@ -53,40 +53,29 @@ const HeroSection = () => {
   }
 
   return (
-    <section className="relative h-screen w-full overflow-hidden bg-stone-50">
-      {/* Background Image */}
-      {heroData.image && (
-        <div className="absolute inset-0">
-          <img
-            src={heroData.image}
-            alt={heroData.title}
-            className="w-full h-full object-cover opacity-20"
-            loading="eager"
-          />
-        </div>
-      )}
+    <section className="relative min-h-screen w-full overflow-hidden bg-white">
+      <div className="container mx-auto px-6 md:px-12 lg:px-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-screen py-20 lg:py-0">
 
-      {/* Content */}
-      <div className="relative z-10 h-full flex items-center justify-center">
-        <div className="container mx-auto px-6 md:px-12 lg:px-20">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
+          {/* Left Content */}
+          <div className="space-y-8 text-center lg:text-left order-2 lg:order-1">
             {/* Subtitle */}
             <p className="text-sm md:text-base tracking-[0.3em] uppercase text-stone-500 font-light">
               {heroData.subtitle}
             </p>
 
             {/* Main Title */}
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-light text-stone-900 tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-stone-900 tracking-tight leading-tight">
               {heroData.title}
             </h1>
 
             {/* Description */}
-            <p className="text-lg md:text-xl text-stone-600 font-light max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-stone-600 font-light leading-relaxed max-w-xl mx-auto lg:mx-0">
               {heroData.description}
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
               <Link to="/collections">
                 <Button
                   size="lg"
@@ -98,11 +87,32 @@ const HeroSection = () => {
               </Link>
             </div>
           </div>
+
+          {/* Right Image */}
+          <div className="order-1 lg:order-2">
+            <div className="relative w-full aspect-[3/4] lg:aspect-[4/5] overflow-hidden bg-stone-100">
+              {heroData.image ? (
+                <img
+                  src={heroData.image}
+                  alt={heroData.title}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200">
+                  <span className="text-stone-400 text-sm tracking-wider uppercase font-light">
+                    No Image Available
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hidden lg:block">
         <div className="w-6 h-10 border-2 border-stone-400 rounded-full flex justify-center">
           <div className="w-1 h-3 bg-stone-400 rounded-full mt-2"></div>
         </div>
