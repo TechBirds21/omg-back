@@ -1,0 +1,39 @@
+{
+  "brand": {
+    "name": "O Maguva",
+    "tagline": "Handcrafted Sarees for Every Celebration",
+    "support_email": "support@omaguva.com",
+    "support_phone": "+91 98765 43210",
+    "address": "12, Heritage Lane, Banjara Hills, Hyderabad - 500034",
+    "logo_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=200&q=80"
+  },
+  "seo": {
+    "default_image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80",
+    "keywords": "sarees, banarasi, kanchipuram, handloom, omaguva"
+  },
+  "hero": {
+    "title": "O Maguva",
+    "subtitle": "సాంప్రదాయం మరియు సంప్రదాయం",
+    "heading": "Timeless Elegance",
+    "description": "Discover the finest collection of handcrafted sarees that blend traditional artistry with contemporary grace.",
+    "images": [
+      "https://images.unsplash.com/photo-1530018607912-eff2daa1bacb?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1545505309-05057ef06a62?auto=format&fit=crop&w=900&q=80"
+    ],
+    "cta_primary_text": "Explore Collections",
+    "cta_secondary_text": "Our Story"
+  },
+  "footer": {
+    "links": [
+      { "label": "About", "href": "/about" },
+      { "label": "Collections", "href": "/collections" },
+      { "label": "Contact", "href": "/contact" }
+    ],
+    "social": [
+      { "label": "Instagram", "href": "https://instagram.com/omaguva" },
+      { "label": "Facebook", "href": "https://facebook.com/omaguva" }
+    ]
+  }
+}
+

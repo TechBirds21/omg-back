@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/webhook/phonepe",
+      "destination": "https://yxaohpktlgkspapnhbwa.functions.supabase.co/phonepe-webhook"
+    },
+    {
+      "source": "/api/webhook/easebuzz",
+      "destination": "https://yxaohpktlgkspapnhbwa.functions.supabase.co/easebuzz-webhook"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

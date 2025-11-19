@@ -1,0 +1,5 @@
+# Webhook proxy to Supabase Edge Function (PhonePe)
+/api/webhook/phonepe https://yxaohpktlgkspapnhbwa.functions.supabase.co/phonepe-webhook 200!
+
+# SPA fallback - redirect all routes to index.html for client-side routing
+/* /index.html 200

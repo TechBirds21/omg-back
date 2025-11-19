@@ -1,0 +1,87 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://omaguva.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /admin-login
+Disallow: /payment-test
+Disallow: /test-panel
+Disallow: /api/
+Disallow: /_next/
+Disallow: /node_modules/
+
+# Allow important pages
+Allow: /
+Allow: /sarees
+Allow: /collections
+Allow: /about
+Allow: /contact
+Allow: /terms-of-service
+Allow: /privacy-policy
+Allow: /shipping-info
+Allow: /returns-exchanges
+
+# Block common bot traps
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /*.txt$
+Disallow: /search?*
+Disallow: /cart
+Disallow: /checkout
+Disallow: /payment-*
+Disallow: /order-*
+Disallow: /account
+Disallow: /wishlist
+Disallow: /track-order
+
+# Allow product pages
+Allow: /product/*
+
+# Block duplicate content
+Disallow: /*?*
+Disallow: /*#*
+Disallow: /*&*
+
+# Block admin and system files
+Disallow: /.env
+Disallow: /.git
+Disallow: /.htaccess
+Disallow: /config/
+Disallow: /logs/
+Disallow: /tmp/
+Disallow: /cache/
+
+# Allow social media bots
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+# Block aggressive crawlers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

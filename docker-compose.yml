@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: omaguva_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: omaguva_db
+      MYSQL_USER: omaguva_user
+      MYSQL_PASSWORD: omaguva_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    container_name: omaguva_api
+    environment:
+      DATABASE_URL: mysql+pymysql://omaguva_user:omaguva_password@mysql:3306/omaguva_db
+      SMTP_SERVER: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: noreply@omaguva.com
+  # Switched to PhonePe - configure PHONEPE_MERCHANT_ID and PHONEPE_MERCHANT_SECRET in environment
+  PHONEPE_MERCHANT_ID: ${PHONEPE_MERCHANT_ID}
+  PHONEPE_MERCHANT_SECRET: ${PHONEPE_MERCHANT_SECRET}
+  PHONEPE_ENV: prod
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: .
+    container_name: omaguva_frontend
+    environment:
+      VITE_API_BASE_URL: https://omaguva.com/api
+  VITE_PHONEPE_MERCHANT_ID: ${PHONEPE_MERCHANT_ID}
+  VITE_PHONEPE_ENV: prod
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "test-001",
+    "customer_name": "Aparna Rao",
+    "customer_location": "Hyderabad",
+    "content": "The Banarasi saree I ordered exceeded expectations. The detailing is exquisite and the packaging was luxurious.",
+    "rating": 5,
+    "image_url": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80",
+    "is_active": true,
+    "display_order": 1
+  },
+  {
+    "id": "test-002",
+    "customer_name": "Nisha Menon",
+    "customer_location": "Bengaluru",
+    "content": "Loved the customer support and styling tips. The linen saree is perfect for my work meetings.",
+    "rating": 4,
+    "image_url": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80",
+    "is_active": true,
+    "display_order": 2
+  },
+  {
+    "id": "test-003",
+    "customer_name": "Priya Sharma",
+    "customer_location": "Delhi",
+    "content": "I wore the Kanchi bridal saree for my reception and received endless compliments. Thank you O Maguva!",
+    "rating": 5,
+    "image_url": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80",
+    "is_active": true,
+    "display_order": 3
+  }
+]
+

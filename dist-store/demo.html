@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color-Specific Images Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .image-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .main-image {
+            aspect-ratio: 3/4;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f3f4f6;
+        }
+        .main-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .thumbnails {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .thumbnail.active {
+            border-color: #3b82f6;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-info h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        .colors {
+            margin: 2rem 0;
+        }
+        .colors h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        .color-options {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .color-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .color-option:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .color-option.active {
+            border-color: #3b82f6;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .color-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #d1d5db;
+        }
+        .color-circle.red { background: #ef4444; }
+        .color-circle.blue { background: #3b82f6; }
+        .color-circle.green { background: #10b981; }
+        .demo-note {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            color: #92400e;
+        }
+        .demo-note strong {
+            color: #78350f;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-note">
+        <strong>Demo:</strong> This shows how the color-specific images feature works. Click on different colors to see how images change for each color variant.
+    </div>
+    
+    <div class="container">
+        <div class="image-section">
+            <div class="main-image">
+                <img id="main-image" src="https://images.pexels.com/photos/8148577/pexels-photo-8148577.jpeg" alt="Product Image">
+            </div>
+            <div class="thumbnails" id="thumbnails">
+                <!-- Thumbnails will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="product-info">
+            <h1>Beautiful Traditional Saree</h1>
+            <p style="color: #6b7280; line-height: 1.6;">
+                Exquisite handcrafted saree featuring traditional patterns and premium quality fabric. 
+                Each color variant has its own unique set of images showcasing the distinct beauty.
+            </p>
+            
+            <div class="colors">
+                <h3>Available Colors</h3>
+                <div class="color-options">
+                    <div class="color-option active" data-color="red">
+                        <div class="color-circle red"></div>
+                        <span>Red</span>
+                    </div>
+                    <div class="color-option" data-color="blue">
+                        <div class="color-circle blue"></div>
+                        <span>Blue</span>
+                    </div>
+                    <div class="color-option" data-color="green">
+                        <div class="color-circle green"></div>
+                        <span>Green</span>
+                    </div>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                    Selected: <span id="selected-color" style="font-weight: 600; color: #1f2937;">Red</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for color-specific images
+        const colorImages = {
+            red: [
+                'https://images.pexels.com/photos/8148577/pexels-photo-8148577.jpeg',
+                'https://images.pexels.com/photos/8902825/pexels-photo-8902825.jpeg',
+                'https://images.pexels.com/photos/5622891/pexels-photo-5622891.jpeg'
+            ],
+            blue: [
+                'https://images.pexels.com/photos/3552472/pexels-photo-3552472.jpeg',
+                'https://images.pexels.com/photos/7289695/pexels-photo-7289695.jpeg',
+                'https://images.pexels.com/photos/4946515/pexels-photo-4946515.jpeg'
+            ],
+            green: [
+                'https://images.pexels.com/photos/6069129/pexels-photo-6069129.jpeg',
+                'https://images.pexels.com/photos/6994935/pexels-photo-6994935.jpeg',
+                'https://images.pexels.com/photos/7606020/pexels-photo-7606020.jpeg'
+            ]
+        };
+        
+        let currentColor = 'red';
+        let currentImageIndex = 0;
+        
+        function updateImages(color) {
+            const images = colorImages[color];
+            const mainImage = document.getElementById('main-image');
+            const thumbnailsContainer = document.getElementById('thumbnails');
+            
+            // Update main image
+            mainImage.src = images[0];
+            currentImageIndex = 0;
+            
+            // Update thumbnails
+            thumbnailsContainer.innerHTML = '';
+            images.forEach((image, index) => {
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `thumbnail ${index === 0 ? 'active' : ''}`;
+                thumbnail.innerHTML = `<img src="${image}" alt="Thumbnail ${index + 1}">`;
+                thumbnail.addEventListener('click', () => selectImage(index));
+                thumbnailsContainer.appendChild(thumbnail);
+            });
+        }
+        
+        function selectImage(index) {
+            const images = colorImages[currentColor];
+            const mainImage = document.getElementById('main-image');
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            
+            mainImage.src = images[index];
+            currentImageIndex = index;
+            
+            thumbnails.forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === index);
+            });
+        }
+        
+        function selectColor(color) {
+            currentColor = color;
+            
+            // Update color selection UI
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.color === color);
+            });
+            
+            // Update selected color text
+            document.getElementById('selected-color').textContent = 
+                color.charAt(0).toUpperCase() + color.slice(1);
+            
+            // Update images for the selected color
+            updateImages(color);
+        }
+        
+        // Add event listeners to color options
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', () => {
+                selectColor(option.dataset.color);
+            });
+        });
+        
+        // Initialize with red color
+        updateImages('red');
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "cat-heritage",
+    "name": "Heritage Weaves",
+    "description": "Timeless Banarasi, Kanchipuram and Patola sarees celebrating Indian craftsmanship.",
+    "image_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
+    "cover_image_index": 0,
+    "is_active": true,
+    "sort_order": 1
+  },
+  {
+    "id": "cat-contemporary",
+    "name": "Contemporary Styles",
+    "description": "Organza, satin and designer sarees for modern celebrations.",
+    "image_url": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80",
+    "cover_image_index": 0,
+    "is_active": true,
+    "sort_order": 2
+  },
+  {
+    "id": "cat-handloom",
+    "name": "Handloom Classics",
+    "description": "Ethically crafted cotton and linen sarees woven by rural artisans.",
+    "image_url": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+    "cover_image_index": 0,
+    "is_active": true,
+    "sort_order": 3
+  }
+]
+
