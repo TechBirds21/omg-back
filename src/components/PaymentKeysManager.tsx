@@ -51,6 +51,34 @@ const PaymentKeysManager: React.FC<PaymentKeysManagerProps> = ({
         return [
           { key: 'merchantKey', label: 'Merchant Key', type: 'text', required: true },
           { key: 'salt', label: 'Salt', type: 'password', required: true },
+          { key: 'environment', label: 'Environment', type: 'select', options: ['test', 'production'], required: true }
+        ];
+      case 'zohopay':
+        return [
+          { key: 'clientId', label: 'Client ID', type: 'text', required: true },
+          { key: 'clientSecret', label: 'Client Secret', type: 'password', required: true },
+          { key: 'organizationId', label: 'Organization ID', type: 'text', required: true },
+          { key: 'gatewayName', label: 'Gateway Name', type: 'text', required: true },
+          { key: 'environment', label: 'Environment', type: 'select', options: ['sandbox', 'production'], required: true }
+        ];
+      case 'razorpay':
+        return [
+          { key: 'keyId', label: 'Key ID', type: 'text', required: true },
+          { key: 'keySecret', label: 'Key Secret', type: 'password', required: true },
+          { key: 'webhookSecret', label: 'Webhook Secret', type: 'password', required: false },
+          { key: 'environment', label: 'Environment', type: 'select', options: ['test', 'live'], required: true }
+        ];
+      case 'pinelabs':
+        return [
+          { key: 'merchantId', label: 'Merchant ID', type: 'text', required: true },
+          { key: 'accessCode', label: 'Access Code', type: 'text', required: true },
+          { key: 'secretKey', label: 'Secret Key', type: 'password', required: true },
+          { key: 'environment', label: 'Environment', type: 'select', options: ['uat', 'production'], required: true }
+        ];
+      case 'easebuzz':
+        return [
+          { key: 'merchantKey', label: 'Merchant Key', type: 'text', required: true },
+          { key: 'salt', label: 'Salt', type: 'password', required: true },
           { key: 'environment', label: 'Environment', type: 'select', options: ['sandbox', 'production'], required: true },
           { key: 'useLegacyEndpoint', label: 'Use Legacy Endpoint', type: 'select', options: ['true', 'false'], required: true }
         ];

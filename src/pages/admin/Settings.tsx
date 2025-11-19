@@ -305,6 +305,28 @@ const Settings = () => {
             configuration: {},
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
+          },
+          {
+            id: 'razorpay-default',
+            payment_method: 'razorpay',
+            is_enabled: false,
+            is_primary: false,
+            display_name: 'Razorpay',
+            description: 'Razorpay - Accept UPI, Cards, Net Banking & more',
+            configuration: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          {
+            id: 'pinelabs-default',
+            payment_method: 'pinelabs',
+            is_enabled: false,
+            is_primary: false,
+            display_name: 'Pine Labs',
+            description: 'Pine Labs - Complete payment solution',
+            configuration: {},
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           }
         ]);
       }
@@ -1734,15 +1756,21 @@ const Settings = () => {
                       {/* Gateway Info */}
                       <div className="flex items-center space-x-3 mb-4">
                         <div className={`p-2 rounded-lg shadow-sm ${
-                          config.payment_method === 'phonepe' 
-                            ? 'bg-gradient-to-br from-blue-500 to-blue-600' 
+                          config.payment_method === 'phonepe'
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600'
                             : config.payment_method === 'easebuzz'
                               ? 'bg-gradient-to-br from-green-500 to-green-600'
-                              : 'bg-gradient-to-br from-purple-500 to-purple-600'
+                              : config.payment_method === 'razorpay'
+                                ? 'bg-gradient-to-br from-indigo-500 to-indigo-600'
+                                : config.payment_method === 'pinelabs'
+                                  ? 'bg-gradient-to-br from-orange-500 to-orange-600'
+                                  : 'bg-gradient-to-br from-purple-500 to-purple-600'
                         }`}>
                           {config.payment_method === 'phonepe' && <Smartphone className="h-6 w-6 text-white" />}
                           {config.payment_method === 'easebuzz' && <CreditCard className="h-6 w-6 text-white" />}
                           {config.payment_method === 'zohopay' && <Banknote className="h-6 w-6 text-white" />}
+                          {config.payment_method === 'razorpay' && <CreditCard className="h-6 w-6 text-white" />}
+                          {config.payment_method === 'pinelabs' && <CreditCard className="h-6 w-6 text-white" />}
                         </div>
                         <div>
                           <h4 className="text-lg font-bold text-gray-900">{config.display_name}</h4>
@@ -1872,11 +1900,35 @@ const Settings = () => {
 
                       {config.payment_method === 'zohopay' && (
                         <div className="mt-4 pt-3 border-t border-gray-200">
-                          <ZohoPayConfigCard 
+                          <ZohoPayConfigCard
                             config={config}
                             onConfigUpdate={async () => {
                               const updatedConfigs = await fetchPaymentConfigs();
                               setPaymentConfigs(updatedConfigs);
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {config.payment_method === 'razorpay' && (
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <PaymentKeysManager
+                            paymentMethod={config.payment_method}
+                            displayName={config.display_name}
+                            onKeysUpdated={() => {
+                              fetchSettings();
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {config.payment_method === 'pinelabs' && (
+                        <div className="mt-4 pt-3 border-t border-gray-200">
+                          <PaymentKeysManager
+                            paymentMethod={config.payment_method}
+                            displayName={config.display_name}
+                            onKeysUpdated={() => {
+                              fetchSettings();
                             }}
                           />
                         </div>
