@@ -68,95 +68,26 @@ export async function imageUrlToDataUrl(url?: string): Promise<string | undefine
 export const getCompleteOrderData = async (orderId: string): Promise<CompleteOrderData | null> => {
   try {
     // Try to get order from backend API
-    try {
-      const { getOrderByOrderId } = await import('@/lib/api-storefront');
-      const orderData = await getOrderByOrderId(orderId);
-      if (orderData) {
-        // If order has product_id, try to get product details
-        if (orderData.product_id && !orderData.product) {
-          try {
-            const { fetchProductById } = await import('@/lib/api-storefront');
-            const product = await fetchProductById(orderData.product_id);
-            if (product) {
-              orderData.product = product;
-            }
-          } catch (e) {
-            // Product fetch failed, continue without product
+    const { getOrderByOrderId } = await import('@/lib/api-storefront');
+    const orderData = await getOrderByOrderId(orderId);
+    if (orderData) {
+      // If order has product_id, try to get product details
+      if (orderData.product_id && !orderData.product) {
+        try {
+          const { fetchProductById } = await import('@/lib/api-storefront');
+          const product = await fetchProductById(orderData.product_id);
+          if (product) {
+            orderData.product = product;
           }
+        } catch (e) {
+          // Product fetch failed, continue without product
         }
-        return orderData as CompleteOrderData;
       }
-    } catch (backendError) {
-      console.warn('Failed to fetch order from backend, trying fallback:', backendError);
+      return orderData as CompleteOrderData;
     }
-    
-    // Fallback: Try by order_id (human readable) - LEGACY: Remove when fully migrated
-    // This fallback uses Supabase directly and should be removed once backend is fully tested
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      let { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          product:product_id(
-            id,
-            name,
-            images,
-            cover_image_index,
-            price,
-            colors,
-            color_images,
-            saree_id,
-            vendor:vendor_id(
-              id,
-              name,
-              vendor_code
-            )
-          )
-        `)
-        .eq('order_id', orderId)
-        .single();
-
-      if (error) {
-        // If 0 rows found, try by primary id (UUID)
-        if ((error as any).code === 'PGRST116') {
-          const byUuid = await supabase
-            .from('orders')
-            .select(`
-              *,
-              product:product_id(
-                id,
-                name,
-                images,
-                cover_image_index,
-                price,
-                colors,
-                color_images,
-                saree_id,
-                vendor:vendor_id(
-                  id,
-                  name,
-                  vendor_code
-                )
-              )
-            `)
-            .eq('id', orderId)
-            .single();
-        if (!byUuid.error) {
-          data = byUuid.data as any;
-        } else {
-          
-          return null;
-        }
-      } else {
-        
-        return null;
-      }
-    }
-
-    return data;
-  } catch (error) {
-    
+    return null;
+  } catch (backendError) {
+    console.warn('Failed to fetch order from backend:', backendError);
     return null;
   }
 };

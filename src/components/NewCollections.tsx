@@ -1,76 +1,108 @@
-// @ts-nocheck
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Heart } from 'lucide-react';
-import { fetchProducts, Product } from '@/lib/api-storefront';
-import { useWishlist } from '@/components/WishlistProvider';
-import { useToast } from '@/hooks/use-toast';
-import { ColorCircle } from '@/lib/colorUtils';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchProducts as fetchProductsAPI, Product } from '@/lib/api-storefront';
+import { Link } from 'react-router-dom';
+import { isProductSoldOut, getSafeImageUrl } from '@/lib/utils';
 
 const NewCollections = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { addToWishlist, isInWishlist } = useWishlist();
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchNewCollectionProducts();
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchProductsAPI({ limit: 4, new_collection: true });
+        setProducts(data);
+      } catch (error) {
+        setError('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
   }, []);
 
-  const fetchNewCollectionProducts = async () => {
-    try {
-      const data = await fetchProducts({ limit: 8, newCollection: true });
-      const today = new Date();
-      const filtered = data.filter((product) => {
-        if (!product.new_collection) return false;
-        if (!product.new_collection_end_date) return true;
-        return new Date(product.new_collection_end_date) >= today;
-      });
-      setProducts(filtered);
-    } catch (error) {
-      
-    } finally {
-      setLoading(false);
+  const productGrid = useMemo(() => {
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      return [];
     }
-  };
 
-  const handleAddToWishlist = (product: Product) => {
-    if (isInWishlist(product.id)) return;
-    
-    addToWishlist({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[product.cover_image_index || 0],
+    return products.map((product) => {
+      const isSoldOut = isProductSoldOut(product);
+
+      return (
+        <Link
+          key={product.id}
+          to={isSoldOut ? '#' : `/product/${encodeURIComponent(product.name)}`}
+          onClick={isSoldOut ? (e) => e.preventDefault() : undefined}
+          className="block group"
+        >
+          <div className="space-y-4">
+            {/* Image Container */}
+            <div className={`relative overflow-hidden bg-stone-100 aspect-[3/4] ${isSoldOut ? 'opacity-50' : ''}`}>
+              <img
+                src={getSafeImageUrl(product.images[product.cover_image_index || 0] || product.images[0])}
+                alt={product.name}
+                className={`w-full h-full object-cover transition-all duration-700 ${
+                  !isSoldOut ? 'group-hover:scale-105' : 'grayscale'
+                }`}
+                loading="lazy"
+              />
+
+              {/* New Badge */}
+              {!isSoldOut && (
+                <div className="absolute top-4 left-4">
+                  <span className="bg-white text-stone-900 px-3 py-1 text-xs tracking-wider uppercase font-light">
+                    New
+                  </span>
+                </div>
+              )}
+
+              {isSoldOut && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                  <span className="text-sm tracking-wider uppercase text-stone-900 font-light">Sold Out</span>
+                </div>
+              )}
+            </div>
+
+            {/* Product Info */}
+            <div className="space-y-2 text-center">
+              <h3 className="text-sm text-stone-900 font-light tracking-wide line-clamp-2">
+                {product.name}
+              </h3>
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-base text-stone-900 font-light">₹{product.price.toLocaleString()}</span>
+                {product.original_price && product.original_price > product.price && (
+                  <span className="text-sm text-stone-400 line-through font-light">
+                    ₹{product.original_price.toLocaleString()}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </Link>
+      );
     });
-    
-    toast({
-      title: "Added to Wishlist",
-      description: `${product.name} has been added to your wishlist.`,
-    });
-  };
+  }, [products]);
 
   if (loading) {
     return (
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              New Collections
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Loading our latest arrivals...
-            </p>
+      <section className="py-24 bg-stone-50">
+        <div className="container mx-auto px-6 md:px-12 lg:px-20">
+          <div className="text-center mb-16">
+            <div className="h-8 bg-stone-200 rounded w-64 mx-auto animate-pulse mb-4"></div>
+            <div className="h-4 bg-stone-100 rounded w-96 mx-auto animate-pulse"></div>
           </div>
-          <div className="grid grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-muted aspect-[9/16] rounded-lg mb-4 w-full"></div>
-                <div className="h-4 bg-muted rounded mb-2"></div>
-                <div className="h-4 bg-muted rounded w-2/3"></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse space-y-4">
+                <div className="bg-stone-200 aspect-[3/4]"></div>
+                <div className="bg-stone-200 h-4 rounded w-3/4 mx-auto"></div>
+                <div className="bg-stone-200 h-4 rounded w-1/2 mx-auto"></div>
               </div>
             ))}
           </div>
@@ -79,128 +111,36 @@ const NewCollections = () => {
     );
   }
 
-  if (products.length === 0) {
-    return (
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              New Collections
-            </h2>
-            <p className="text-muted-foreground">
-              No new collections available at the moment. Check back soon!
-            </p>
-          </div>
-        </div>
-      </section>
-    );
+  if (error || !products || products.length === 0) {
+    return null;
   }
 
   return (
-    <section className="py-16 bg-white relative overflow-hidden">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3 text-slate-900">
-            Fresh Arrivals
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto text-sm">
-            Discover our latest handpicked sarees
+    <section className="py-24 bg-stone-50">
+      <div className="container mx-auto px-6 md:px-12 lg:px-20">
+        {/* Section Header */}
+        <div className="text-center mb-16 space-y-4">
+          <p className="text-xs md:text-sm tracking-[0.3em] uppercase text-stone-500 font-light">
+            Latest Arrivals
           </p>
+          <h2 className="text-4xl md:text-5xl font-light text-stone-900 tracking-tight">
+            New Collection
+          </h2>
         </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6 max-w-full overflow-hidden">
-          {products.map((product, index) => {
-            const mainImage = product.images[product.cover_image_index || 0];
-            const isInWishlistCheck = isInWishlist(product.id);
-            
-            return (
-              <div 
-                key={product.id} 
-                className="group relative"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <Card className="overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all duration-300 relative w-full mobile-safe-card card-container">
-                  <Link to={`/product/${encodeURIComponent(product.name)}`} className="block w-full">
-                    <div className="relative aspect-[9/16] overflow-hidden bg-gray-100">
-                      {/* First Image - Default */}
-                      <img
-                        src={mainImage}
-                        alt={product.name}
-                        className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-500 ${
-                          product.images && product.images.length > 1 ? 'group-hover:opacity-0' : ''
-                        }`}
-                        loading="lazy"
-                      />
-                      {/* Second Image - On Hover (only if 2+ images exist) */}
-                      {product.images && product.images.length > 1 && (
-                        <img
-                          src={product.images[1]}
-                          alt={product.name}
-                          className="absolute inset-0 w-full h-full object-cover object-center opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                          loading="lazy"
-                        />
-                      )}
-                      
-                      
-                      {/* Badge - Sutisancha Style */}
-                      <div className="absolute top-3 left-3 z-10">
-                        <div className="bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-semibold shadow-sm">
-                          NEW
-                        </div>
-                      </div>
-                      
-                      {/* Wishlist Button - Sutisancha Style */}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`absolute top-3 right-3 z-10 rounded-full transition-all duration-300 ${
-                          isInWishlistCheck 
-                            ? 'bg-white text-pink-500 shadow-sm' 
-                            : 'bg-white/80 text-slate-600 hover:bg-white hover:text-pink-500 shadow-sm'
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleAddToWishlist(product);
-                        }}
-                      >
-                        <Heart className={`h-4 w-4 ${isInWishlistCheck ? 'fill-current' : ''}`} />
-                      </Button>
-                    </div>
-                  </Link>
-
-                  <div className="p-4 bg-white">
-                    <h3 className="font-medium text-sm mb-2 line-clamp-2 text-slate-800 group-hover:text-slate-800">
-                      {product.name}
-                    </h3>
-
-                    {/* Price - Sutisancha Style */}
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-semibold text-base text-slate-900">
-                        ₹{Number(product.price).toLocaleString()}
-                      </span>
-                      {product.original_price && product.original_price > product.price && (
-                        <>
-                          <span className="text-xs text-slate-500 line-through font-normal">
-                            ₹{Number(product.original_price).toLocaleString()}
-                          </span>
-                          <span className="text-xs font-semibold text-green-600 ml-1">
-                            {Math.round(((product.original_price - product.price) / product.original_price) * 100)}% OFF
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            );
-          })}
+        {/* Products Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
+          {productGrid}
         </div>
 
+        {/* View All Button */}
         <div className="text-center">
           <Link to="/new-collections">
-            <Button size="lg" className="px-6 py-3 text-sm font-medium bg-slate-900 hover:bg-slate-800 text-white border-0 shadow-sm transition-all duration-300 rounded">
-              View All Collections
+            <Button
+              variant="outline"
+              className="border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-white px-10 py-6 text-sm tracking-wider uppercase font-light transition-all duration-300"
+            >
+              Explore New Arrivals
             </Button>
           </Link>
         </div>
