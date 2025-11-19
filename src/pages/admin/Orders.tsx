@@ -3626,7 +3626,6 @@ const Orders: React.FC = () => {
         </DialogContent>
       </Dialog>
     </div>
-    </div>
   );
 };
 
